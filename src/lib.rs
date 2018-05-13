@@ -1,13 +1,23 @@
+#![deny(
+    missing_debug_implementations, missing_copy_implementations, trivial_casts,
+    trivial_numeric_casts, unused_extern_crates, unused_import_braces, unused_qualifications,
+    variant_size_differences
+)]
+#![warn(missing_docs)]
+
 //! Simple graphml file format output.
 
 extern crate petgraph;
 extern crate xml;
 
+use petgraph::visit::{
+    EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef,
+};
 use std::borrow::Cow;
 use std::collections::HashSet;
+use std::fmt::Debug;
 use std::io::{Cursor, Result as IoResult, Write};
 use std::string::ToString;
-use petgraph::visit::{EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef};
 use xml::common::XmlVersion;
 use xml::writer::events::XmlEvent;
 use xml::writer::Error as XmlError;
@@ -164,10 +174,7 @@ where
                                   for_: For|
          -> WriterResult<()> {
             writer.write(XmlEvent::start_element("data").attr("key", &*name))?;
-            attributes.insert(Attribute {
-                name,
-                for_,
-            });
+            attributes.insert(Attribute { name, for_ });
             writer.write(XmlEvent::characters(data))?;
             writer.write(XmlEvent::end_element()) // end data
         };
@@ -234,5 +241,21 @@ where
             writer.write(XmlEvent::end_element())?; // end key
         }
         Ok(())
+    }
+}
+
+impl<G> Debug for GraphMl<G>
+where
+    G: Debug,
+    G: IntoEdgeReferences,
+    G: IntoNodeReferences,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.debug_struct("GraphMl")
+            .field("graph", &self.graph)
+            .field("pretty_print", &self.pretty_print)
+            .field("export_edges", &self.export_edges.is_some())
+            .field("export_nodes", &self.export_nodes.is_some())
+            .finish()
     }
 }
