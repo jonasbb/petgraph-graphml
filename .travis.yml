@@ -16,12 +16,13 @@ branches:
 
 matrix:
   include:
-    - rust: 1.15.0
+    - rust: 1.20.0
     - rust: stable
     - rust: beta
     - rust: nightly
 
 script:
   - |
+      set -e
       cargo build --verbose &&
       cargo test --verbose
