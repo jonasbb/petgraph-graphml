@@ -1,11 +1,84 @@
+//! [![docs.rs badge](https://docs.rs/petgraph-graphml/badge.svg)](https://docs.rs/petgraph-graphml/)
+//! [![crates.io badge](https://img.shields.io/crates/v/petgraph-graphml.svg)](https://crates.io/crates/petgraph-graphml/)
+//! [![Build Status](https://travis-ci.com/jonasbb/petgraph-graphml.svg?branch=master)](https://travis-ci.com/jonasbb/petgraph-graphml)
+//!
+//! ---
+//!
+//! This crate extends [petgraph][] with [GraphML][graphmlwebsite] output support.
+//!
+//! This crate exports a single type [`GraphMl`] which combines a build-pattern for configuration and provides creating strings ([`GraphMl::to_string`]) and writing to writers ([`GraphMl::to_writer`]).
+//!
+//! # Usage
+//!
+//! Add this to your `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! petgraph-graphml = "1.0.0"
+//! ```
+//!
+//! # Example
+//!
+//! For a simple graph like ![Graph with three nodes and two edges](https://github.com/jonasbb/petgraph-graphml/tree/master/doc/graph.png) this is the generated GraphML output.
+//!
+//! ```
+//! # extern crate petgraph;
+//! # extern crate petgraph_graphml;
+//! # use petgraph::Graph;
+//! # use petgraph_graphml::GraphMl;
+//! # fn make_graph() -> Graph<u32, ()> {
+//! #     let mut graph = Graph::new();
+//! #     let n0 = graph.add_node(0);
+//! #     let n1 = graph.add_node(1);
+//! #     let n2 = graph.add_node(2);
+//! #     graph.update_edge(n0, n1, ());
+//! #     graph.update_edge(n1, n2, ());
+//! #     graph
+//! # }
+//! # fn main() {
+//! let graph = make_graph();
+//! // Configure output settings
+//! // Enable pretty printing and exporting of node weights.
+//! // Use the Display implementation of NodeWeights for exporting them.
+//! let graphml = GraphMl::new(&graph)
+//!     .pretty_print(true)
+//!     .export_node_weights_display();
+//!
+//! assert_eq!(
+//!     graphml.to_string(),
+//!     r#"<?xml version="1.0" encoding="UTF-8"?>
+//! <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+//!   <graph edgedefault="directed">
+//!     <node id="n0">
+//!       <data key="weight">0</data>
+//!     </node>
+//!     <node id="n1">
+//!       <data key="weight">1</data>
+//!     </node>
+//!     <node id="n2">
+//!       <data key="weight">2</data>
+//!     </node>
+//!     <edge id="e0" source="n0" target="n1" />
+//!     <edge id="e1" source="n1" target="n2" />
+//!   </graph>
+//!   <key id="weight" for="node" attr.name="weight" attr.type="string" />
+//! </graphml>"#
+//! );
+//! # }
+//! ```
+//!
+//! [`GraphMl`]: https://docs.rs/petgraph-graphml/*/petgraph_graphml/struct.GraphMl.html
+//! [`GraphMl::to_string`]: https://docs.rs/petgraph-graphml/*/petgraph_graphml/struct.GraphMl.html#method.to_string
+//! [`GraphMl::to_writer`]: https://docs.rs/petgraph-graphml/*/petgraph_graphml/struct.GraphMl.html#method.to_writer
+//! [graphmlwebsite]: http://graphml.graphdrawing.org/
+//! [petgraph]: https://docs.rs/petgraph/
+//!
+
 #![deny(
-    missing_debug_implementations, missing_copy_implementations, trivial_casts,
+    missing_debug_implementations, missing_copy_implementations, missing_docs, trivial_casts,
     trivial_numeric_casts, unused_extern_crates, unused_import_braces, unused_qualifications,
     variant_size_differences
 )]
-#![warn(missing_docs)]
-
-//! Simple graphml file format output.
 
 extern crate petgraph;
 extern crate xml;
@@ -16,12 +89,11 @@ use petgraph::visit::{
 use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fmt::Debug;
-use std::io::{Cursor, Result as IoResult, Write};
+use std::io::{self, Cursor, Write};
 use std::string::ToString;
 use xml::common::XmlVersion;
 use xml::writer::events::XmlEvent;
-use xml::writer::Error as XmlError;
-use xml::writer::{EventWriter, Result as WriterResult};
+use xml::writer::{Error as XmlError, EventWriter, Result as WriterResult};
 use xml::EmitterConfig;
 
 static NAMESPACE_URL: &str = "http://graphml.graphdrawing.org/xmlns";
@@ -49,6 +121,9 @@ impl For {
 
 type PrintWeights<W> = for<'a> Fn(&'a W) -> Vec<(Cow<'static, str>, Cow<'a, str>)>;
 
+/// GraphML output printer
+///
+/// See the [main crate documentation](index.html) for usage instructions and examples.
 pub struct GraphMl<G>
 where
     G: IntoEdgeReferences,
@@ -67,6 +142,7 @@ where
     G: IntoEdgeReferences,
     G: NodeIndexable,
 {
+    /// Create a new GraphML printer for the graph.
     pub fn new(graph: G) -> Self {
         Self {
             graph,
@@ -76,11 +152,22 @@ where
         }
     }
 
+    /// Enable or disble pretty printing of the XML.
+    ///
+    /// Pretty printing enables linebreaks and indentation.
     pub fn pretty_print(mut self, state: bool) -> Self {
         self.pretty_print = state;
         self
     }
 
+    /// Export the edge weights to GraphML.
+    ///
+    /// This uses the [`Display`] implementation of the edge weight type.
+    /// The attribute name defaults to "weight".
+    ///
+    /// Once set this option cannot be disabled anymore.
+    ///
+    /// [`Display`]: ::std::fmt::Display
     pub fn export_edge_weights_display(self) -> Self
     where
         G::EdgeWeight: ToString,
@@ -90,11 +177,54 @@ where
         }))
     }
 
+    /// Export the edge weights to GraphML.
+    ///
+    /// This uses a custom conversion function.
+    /// Each edge can be converted into an arbitray number of attributes.
+    /// Each attribute is a key-value pair, represented as tuple.
+    ///
+    /// Once set this option cannot be disabled anymore.
+    ///
+    /// # Example
+    ///
+    /// A custom print function for the type `(String, u32)`.
+    /// It will create two attributes "str attr" and "int attr" containing the string and integer part.
+    ///
+    /// ```
+    /// # extern crate petgraph;
+    /// # extern crate petgraph_graphml;
+    /// # use petgraph::Graph;
+    /// # use petgraph_graphml::GraphMl;
+    /// # fn make_graph() -> Graph<(), (String, u32)> {
+    /// #     Graph::new()
+    /// # }
+    /// # fn main() {
+    /// let graph = make_graph();
+    /// let graphml = GraphMl::new(&graph)
+    ///     .export_edge_weights(Box::new(|edge| {
+    ///         let &(ref s, i) = edge;
+    ///         vec![
+    ///             ("str attr".into(), s[..].into()),
+    ///             ("int attr".into(), i.to_string().into()),
+    ///         ]
+    ///     }));
+    /// # }
+    /// ```
+    ///
+    /// Currently only string attribute types are supported.
     pub fn export_edge_weights(mut self, edge_weight: Box<PrintWeights<G::EdgeWeight>>) -> Self {
         self.export_edges = Some(edge_weight);
         self
     }
 
+    /// Export the node weights to GraphML.
+    ///
+    /// This uses the [`Display`] implementation of the node weight type.
+    /// The attribute name defaults to "weight".
+    ///
+    /// Once set this option cannot be disabled anymore.
+    ///
+    /// [`Display`]: ::std::fmt::Display
     pub fn export_node_weights_display(self) -> Self
     where
         G::NodeWeight: ToString,
@@ -104,11 +234,47 @@ where
         }))
     }
 
+    /// Export the node weights to GraphML.
+    ///
+    /// This uses a custom conversion function.
+    /// Each node can be converted into an arbitray number of attributes.
+    /// Each attribute is a key-value pair, represented as tuple.
+    ///
+    /// Once set this option cannot be disabled anymore.
+    ///
+    /// # Example
+    ///
+    /// A custom print function for the type `(String, u32)`.
+    /// It will create two attributes "str attr" and "int attr" containing the string and integer part.
+    ///
+    /// ```
+    /// # extern crate petgraph;
+    /// # extern crate petgraph_graphml;
+    /// # use petgraph::Graph;
+    /// # use petgraph_graphml::GraphMl;
+    /// # fn make_graph() -> Graph<(String, u32), ()> {
+    /// #     Graph::new()
+    /// # }
+    /// # fn main() {
+    /// let graph = make_graph();
+    /// let graphml = GraphMl::new(&graph)
+    ///     .export_node_weights(Box::new(|node| {
+    ///         let &(ref s, i) = node;
+    ///         vec![
+    ///             ("str attr".into(), s[..].into()),
+    ///             ("int attr".into(), i.to_string().into()),
+    ///         ]
+    ///     }));
+    /// # }
+    /// ```
+    ///
+    /// Currently only string attribute types are supported.
     pub fn export_node_weights(mut self, node_weight: Box<PrintWeights<G::NodeWeight>>) -> Self {
         self.export_nodes = Some(node_weight);
         self
     }
 
+    /// Create a string with the GraphML content.
     pub fn to_string(&self) -> String {
         let mut buff = Cursor::new(Vec::new());
         self.to_writer(&mut buff)
@@ -116,7 +282,8 @@ where
         String::from_utf8(buff.into_inner()).unwrap()
     }
 
-    pub fn to_writer<W>(&self, writer: W) -> IoResult<()>
+    /// Write the GraphML file to the given writer.
+    pub fn to_writer<W>(&self, writer: W) -> io::Result<()>
     where
         W: Write,
     {
