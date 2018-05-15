@@ -3,10 +3,10 @@ name = "petgraph-graphml"
 version = "1.0.0"
 authors = ["jonasbb"]
 
-description = "GraphML "
+description = "GraphML output support for petgraph"
 documentation = "https://docs.rs/petgraph-graphml/"
 repository = "https://github.com/jonasbb/petgraph-graphml"
-# readme = "README.md"
+readme = "README.md"
 keywords = ["graphml", "petgraph"]
 license = "MIT/Apache-2.0"
 
