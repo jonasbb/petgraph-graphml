@@ -111,8 +111,8 @@ enum For {
 }
 
 impl For {
-    fn to_str(&self) -> &'static str {
-        match *self {
+    fn to_str(self) -> &'static str {
+        match self {
             For::Node => "node",
             For::Edge => "edge",
         }
