@@ -1,10 +1,10 @@
 language: rust
 sudo: false
-cache: cargo
 
 notifications:
   email: false
 
+# https://github.com/bors-ng/bors-ng/issues/441#issuecomment-410467524
 branches:
   only:
     # Enable building pull requests.
@@ -16,13 +16,40 @@ branches:
 
 matrix:
   include:
-    - rust: 1.20.0
-    - rust: stable
-    - rust: beta
-    - rust: nightly
+    - name: "Bors (1.20.0)"
+      if: branch = staging OR branch = trying
+      rust: 1.20.0
+    - name: "Bors (stable)"
+      if: branch = staging OR branch = trying
+      rust: stable
+    - name: "Bors (beta)"
+      if: branch = staging OR branch = trying
+      rust: beta
+    - name: "Bors (nightly)"
+      if: branch = staging OR branch = trying
+      rust: nightly
+    - name: "PR Open"
+      if: type = pull_request AND branch = master
+      rust: stable
+
+# https://levans.fr/rust_travis_cache.html
+# Need to cache the whole `.cargo` directory to keep .crates.toml for
+# cargo-update to work
+cache:
+  directories:
+    - /home/travis/.cargo
+
+# But don't cache the cargo registry
+before_cache:
+  - rm -rf /home/travis/.cargo/registry
+
+before_script:
+  # skip this step for 1.20.0
+  - ( test $TRAVIS_RUST_VERSION = "1.20.0" || rustup component add clippy-preview )
 
 script:
-  - |
-      set -e
-      cargo build --verbose &&
-      cargo test --verbose
+  - set -e
+  - cargo build --verbose --all
+  # skip this step for 1.20.0
+  - ( test $TRAVIS_RUST_VERSION = "1.20.0" || cargo clippy --verbose --all)
+  - cargo test --verbose --all
