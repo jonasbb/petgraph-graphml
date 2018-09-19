@@ -75,8 +75,14 @@
 //!
 
 #![deny(
-    missing_debug_implementations, missing_copy_implementations, missing_docs, trivial_casts,
-    trivial_numeric_casts, unused_extern_crates, unused_import_braces, unused_qualifications,
+    missing_debug_implementations,
+    missing_copy_implementations,
+    missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications,
     variant_size_differences
 )]
 
@@ -111,8 +117,8 @@ enum For {
 }
 
 impl For {
-    fn to_str(&self) -> &'static str {
-        match *self {
+    fn to_str(self) -> &'static str {
+        match self {
             For::Node => "node",
             For::Edge => "edge",
         }

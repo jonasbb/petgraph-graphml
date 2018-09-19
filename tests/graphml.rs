@@ -1,8 +1,8 @@
 extern crate petgraph;
 extern crate petgraph_graphml;
 
-use petgraph_graphml::GraphMl;
 use petgraph::graph::Graph;
+use petgraph_graphml::GraphMl;
 
 #[test]
 fn single_node() {
