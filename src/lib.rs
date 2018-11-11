@@ -73,7 +73,6 @@
 //! [`GraphMl::to_writer`]: https://docs.rs/petgraph-graphml/*/petgraph_graphml/struct.GraphMl.html#method.to_writer
 //! [graphmlwebsite]: http://graphml.graphdrawing.org/
 //! [petgraph]: https://docs.rs/petgraph/
-//!
 
 #![deny(
     missing_debug_implementations,
