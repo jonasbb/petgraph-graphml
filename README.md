@@ -3,6 +3,7 @@
 [![docs.rs badge](https://docs.rs/petgraph-graphml/badge.svg)](https://docs.rs/petgraph-graphml/)
 [![crates.io badge](https://img.shields.io/crates/v/petgraph-graphml.svg)](https://crates.io/crates/petgraph-graphml/)
 [![Build Status](https://travis-ci.com/jonasbb/petgraph-graphml.svg?branch=master)](https://travis-ci.com/jonasbb/petgraph-graphml)
+[![codecov](https://codecov.io/gh/jonasbb/petgraph-graphml/branch/master/graph/badge.svg)](https://codecov.io/gh/jonasbb/petgraph-graphml)
 
 ---
 
