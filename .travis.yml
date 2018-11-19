@@ -1,5 +1,6 @@
 language: rust
-sudo: false
+sudo: true
+cache: cargo
 
 notifications:
   email: false
@@ -17,20 +18,28 @@ branches:
 matrix:
   include:
     - name: "Bors (1.20.0)"
-      if: branch = staging OR branch = trying
+      if: branch = staging OR branch = trying OR type = cron
       rust: 1.20.0
     - name: "Bors (stable)"
-      if: branch = staging OR branch = trying
+      if: branch = staging OR branch = trying OR type = cron
       rust: stable
     - name: "Bors (beta)"
-      if: branch = staging OR branch = trying
+      if: branch = staging OR branch = trying OR type = cron
       rust: beta
     - name: "Bors (nightly)"
-      if: branch = staging OR branch = trying
+      if: branch = staging OR branch = trying OR type = cron
       rust: nightly
     - name: "PR Open"
       if: type = pull_request AND branch = master
       rust: stable
+    # - name: "Minimal Versions"
+    #   if: branch = staging OR branch = trying OR type = cron OR ( type = pull_request AND branch = master )
+    #   rust: nightly
+    #   script:
+    #     - set -e
+    #     - cargo generate-lockfile -Z minimal-versions
+    #     - cargo build --verbose --all --all-features
+    #     - cargo test --verbose --all --all-features
 
 # https://levans.fr/rust_travis_cache.html
 # Need to cache the whole `.cargo` directory to keep .crates.toml for
@@ -43,9 +52,37 @@ cache:
 before_cache:
   - rm -rf /home/travis/.cargo/registry
 
+env:
+  global:
+  - RUSTFLAGS="-C link-dead-code"
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev
+      - libiberty-dev
+
 before_script:
   # skip this step for 1.20.0
   - ( test $TRAVIS_RUST_VERSION = "1.20.0" || rustup component add clippy-preview )
+  - export PATH=$HOME/.cargo/bin:$PATH
+  - |
+    if [ $TRAVIS_RUST_VERSION != "1.20.0" ]; then
+      ( which cargo-install-update || cargo install cargo-update )
+      ( which cargo-kcov || cargo install cargo-kcov )
+      ( cargo fetch && cargo install-update -a )
+
+      if [ ! -x $HOME/.cargo/bin/kcov ] || [ ! -f $HOME/.cargo/bin/kcov ]; then
+        mkdir kcov
+        cd kcov
+        cargo kcov --print-install-kcov-sh | sh
+        cd ${TRAVIS_BUILD_DIR}
+        rm -rf kcov
+      fi
+    fi
 
 script:
   - set -e
@@ -53,3 +90,9 @@ script:
   # skip this step for 1.20.0
   - ( test $TRAVIS_RUST_VERSION = "1.20.0" || cargo clippy --verbose --all)
   - cargo test --verbose --all
+  - |
+    if [ $TRAVIS_RUST_VERSION != "1.20.0" ]; then
+      cargo kcov --verbose --no-clean-rebuild
+      bash <(curl -s https://codecov.io/bash)
+      echo "CodeCov Uploading of data was successful!"
+    fi
