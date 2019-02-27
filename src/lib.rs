@@ -15,7 +15,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! petgraph-graphml = "1.0.0"
+//! petgraph-graphml = "1.0.3"
 //! ```
 //!
 //! # Example
@@ -85,6 +85,7 @@
     unused_qualifications,
     variant_size_differences
 )]
+#![doc(html_root_url = "https://docs.rs/petgraph-graphml/1.0.3")]
 
 extern crate petgraph;
 extern crate xml;

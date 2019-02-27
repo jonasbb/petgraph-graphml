@@ -1,6 +1,5 @@
 language: rust
 sudo: true
-cache: cargo
 
 notifications:
   email: false
@@ -17,9 +16,9 @@ branches:
 
 matrix:
   include:
-    - name: "Bors (1.20.0)"
+    - name: "Bors (1.24.1)"
       if: branch = staging OR branch = trying OR type = cron
-      rust: 1.20.0
+      rust: 1.24.1
     - name: "Bors (stable)"
       if: branch = staging OR branch = trying OR type = cron
       rust: stable
@@ -66,11 +65,11 @@ addons:
       - libiberty-dev
 
 before_script:
-  # skip this step for 1.20.0
-  - ( test $TRAVIS_RUST_VERSION = "1.20.0" || rustup component add clippy-preview )
+  # skip this step for 1.24.1
+  - ( test $TRAVIS_RUST_VERSION = "1.24.1" || rustup component add clippy-preview )
   - export PATH=$HOME/.cargo/bin:$PATH
   - |
-    if [ $TRAVIS_RUST_VERSION != "1.20.0" ]; then
+    if [ $TRAVIS_RUST_VERSION != "1.24.1" ]; then
       ( which cargo-install-update || cargo install cargo-update )
       ( which cargo-kcov || cargo install cargo-kcov )
       ( cargo fetch && cargo install-update -a )
@@ -87,11 +86,11 @@ before_script:
 script:
   - set -e
   - cargo build --verbose --all
-  # skip this step for 1.20.0
-  - ( test $TRAVIS_RUST_VERSION = "1.20.0" || cargo clippy --verbose --all)
+  # skip this step for 1.24.1
+  - ( test $TRAVIS_RUST_VERSION = "1.24.1" || cargo clippy --verbose --all)
   - cargo test --verbose --all
   - |
-    if [ $TRAVIS_RUST_VERSION != "1.20.0" ]; then
+    if [ $TRAVIS_RUST_VERSION != "1.24.1" ]; then
       cargo kcov --verbose --no-clean-rebuild
       bash <(curl -s https://codecov.io/bash)
       echo "CodeCov Uploading of data was successful!"
