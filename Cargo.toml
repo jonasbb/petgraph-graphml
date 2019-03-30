@@ -16,5 +16,5 @@ maintenance = { status = "passively-maintained" }
 
 [dependencies]
 petgraph = "0.4.0"
-version-sync = "0.7.0"
+version-sync = "0.8.0"
 xml-rs = "0.8.0"
