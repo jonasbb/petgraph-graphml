@@ -16,29 +16,21 @@ branches:
 
 matrix:
   include:
-    - name: "Bors (1.24.1)"
-      if: branch = staging OR branch = trying OR type = cron
-      rust: 1.24.1
+    - name: "Bors (1.31.1)"
+      if: type = pull_request OR branch = staging OR branch = trying OR type = cron OR type = api
+      rust: 1.31.1
     - name: "Bors (stable)"
-      if: branch = staging OR branch = trying OR type = cron
+      if: branch = staging OR branch = trying OR type = cron OR type = api
       rust: stable
     - name: "Bors (beta)"
-      if: branch = staging OR branch = trying OR type = cron
+      if: branch = staging OR branch = trying OR type = cron OR type = api
       rust: beta
     - name: "Bors (nightly)"
-      if: branch = staging OR branch = trying OR type = cron
+      if: branch = staging OR branch = trying OR type = cron OR type = api
       rust: nightly
     - name: "PR Open"
-      if: type = pull_request AND branch = master
-      rust: stable
-    # - name: "Minimal Versions"
-    #   if: branch = staging OR branch = trying OR type = cron OR ( type = pull_request AND branch = master )
-    #   rust: nightly
-    #   script:
-    #     - set -e
-    #     - cargo generate-lockfile -Z minimal-versions
-    #     - cargo build --verbose --all --all-features
-    #     - cargo test --verbose --all --all-features
+      if: type = pull_request AND branch = master OR type = api
+      rust: nightly
 
 # https://levans.fr/rust_travis_cache.html
 # Need to cache the whole `.cargo` directory to keep .crates.toml for
@@ -53,7 +45,8 @@ before_cache:
 
 env:
   global:
-  - RUSTFLAGS="-C link-dead-code"
+    - RUSTFLAGS="-C link-dead-code"
+    - RUST_BACKTRACE="full"
 
 addons:
   apt:
@@ -65,33 +58,43 @@ addons:
       - libiberty-dev
 
 before_script:
+  # Allow this step to fail in case clippy is not available for whatever reason
   # skip this step for 1.24.1
-  - ( test $TRAVIS_RUST_VERSION = "1.24.1" || rustup component add clippy-preview )
+  - ( rustup component add clippy-preview || true)
   - export PATH=$HOME/.cargo/bin:$PATH
   - |
-    if [ $TRAVIS_RUST_VERSION != "1.24.1" ]; then
-      ( which cargo-install-update || cargo install cargo-update )
-      ( which cargo-kcov || cargo install cargo-kcov )
-      ( cargo fetch && cargo install-update -a )
-
-      if [ ! -x $HOME/.cargo/bin/kcov ] || [ ! -f $HOME/.cargo/bin/kcov ]; then
-        mkdir kcov
-        cd kcov
-        cargo kcov --print-install-kcov-sh | sh
-        cd ${TRAVIS_BUILD_DIR}
-        rm -rf kcov
-      fi
+    if [[ "$TRAVIS_RUST_VERSION" == stable ]] || [[ "$TRAVIS_RUST_VERSION" == beta ]] || [[ "$TRAVIS_RUST_VERSION" == nightly ]]
+    then
+      which cargo-install-update || cargo install cargo-update
+      # Update cargo metadata to make cargo install-update work
+      cargo fetch
+      # Install or update all tools
+      cargo install-update --allow-no-update \
+        cargo-audit \
+        cargo-tarpaulin
+      # Update all tools
+      cargo install-update -a
     fi
 
 script:
   - set -e
-  - cargo build --verbose --all
-  # skip this step for 1.24.1
-  - ( test $TRAVIS_RUST_VERSION = "1.24.1" || cargo clippy --verbose --all)
-  - cargo test --verbose --all
   - |
-    if [ $TRAVIS_RUST_VERSION != "1.24.1" ]; then
-      cargo kcov --verbose --no-clean-rebuild
+    if [[ "$TRAVIS_RUST_VERSION" == stable ]]
+    then
+      cargo audit
+    fi
+  - cargo build --verbose --all
+  # skip this step if clippy is not available, e.g., bad nightly
+  # `|| true` to make the command always succeed, because the `set -e` would fail otherwise
+  - ( which cargo-clippy >/dev/null 2>&1 && cargo clippy --verbose --all ) || true
+  - cargo test --verbose --all
+
+after_success:
+  - |
+    if [[ "$TRAVIS_RUST_VERSION" == stable ]] || [[ "$TRAVIS_RUST_VERSION" == nightly ]]
+    then
+      export TARPAULIN=1
+      cargo tarpaulin --out Xml --all --all-features
       bash <(curl -s https://codecov.io/bash)
       echo "CodeCov Uploading of data was successful!"
     fi
