@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 * Changelog
+* Add html_root_url to support rustdoc linking
+
+### Changed
+
+* The MSRV is not 1.31
 
 ## [1.0.2] - 2018-05-15
 
