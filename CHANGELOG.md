@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.0.0] - 2020-02-03
+
 ### Added
 
+* Update petgraph dependency to 0.5.0
 * Changelog
-* Add html_root_url to support rustdoc linking
+* Add `html_root_url` to support rustdoc linking
 
 ### Changed
 

@@ -1,6 +1,6 @@
 //! [![docs.rs badge](https://docs.rs/petgraph-graphml/badge.svg)](https://docs.rs/petgraph-graphml/)
 //! [![crates.io badge](https://img.shields.io/crates/v/petgraph-graphml.svg)](https://crates.io/crates/petgraph-graphml/)
-//! [![Build Status](https://travis-ci.com/jonasbb/petgraph-graphml.svg?branch=master)](https://travis-ci.com/jonasbb/petgraph-graphml)
+//! [![Rust CI](https://github.com/jonasbb/petgraph-graphml/workflows/Rust%20CI/badge.svg)](https://github.com/jonasbb/petgraph-graphml)
 //! [![codecov](https://codecov.io/gh/jonasbb/petgraph-graphml/branch/master/graph/badge.svg)](https://codecov.io/gh/jonasbb/petgraph-graphml)
 //!
 //! ---
@@ -15,7 +15,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! petgraph-graphml = "1.0.3"
+//! petgraph-graphml = "2.0.0"
 //! ```
 //!
 //! # Example
@@ -85,7 +85,7 @@
     unused_qualifications,
     variant_size_differences
 )]
-#![doc(html_root_url = "https://docs.rs/petgraph-graphml/1.0.3")]
+#![doc(html_root_url = "https://docs.rs/petgraph-graphml/2.0.0")]
 
 extern crate petgraph;
 extern crate xml;
