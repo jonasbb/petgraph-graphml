@@ -1,6 +1,6 @@
 //! [![docs.rs badge](https://docs.rs/petgraph-graphml/badge.svg)](https://docs.rs/petgraph-graphml/)
 //! [![crates.io badge](https://img.shields.io/crates/v/petgraph-graphml.svg)](https://crates.io/crates/petgraph-graphml/)
-//! [![Build Status](https://travis-ci.com/jonasbb/petgraph-graphml.svg?branch=master)](https://travis-ci.com/jonasbb/petgraph-graphml)
+//! [![Rust CI](https://github.com/jonasbb/petgraph-graphml/workflows/Rust%20CI/badge.svg)](https://github.com/jonasbb/petgraph-graphml)
 //! [![codecov](https://codecov.io/gh/jonasbb/petgraph-graphml/branch/master/graph/badge.svg)](https://codecov.io/gh/jonasbb/petgraph-graphml)
 //!
 //! ---
@@ -15,7 +15,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! petgraph-graphml = "1.0.3"
+//! petgraph-graphml = "2.0.0"
 //! ```
 //!
 //! # Example
@@ -85,7 +85,7 @@
     unused_qualifications,
     variant_size_differences
 )]
-#![doc(html_root_url = "https://docs.rs/petgraph-graphml/1.0.3")]
+#![doc(html_root_url = "https://docs.rs/petgraph-graphml/2.0.0")]
 
 extern crate petgraph;
 extern crate xml;
@@ -93,15 +93,18 @@ extern crate xml;
 use petgraph::visit::{
     EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef,
 };
-use std::borrow::Cow;
-use std::collections::HashSet;
-use std::fmt::Debug;
-use std::io::{self, Cursor, Write};
-use std::string::ToString;
-use xml::common::XmlVersion;
-use xml::writer::events::XmlEvent;
-use xml::writer::{Error as XmlError, EventWriter, Result as WriterResult};
-use xml::EmitterConfig;
+use std::{
+    borrow::Cow,
+    collections::HashSet,
+    fmt::{self, Debug, Display},
+    io::{self, Cursor, Write},
+    string::ToString,
+};
+use xml::{
+    common::XmlVersion,
+    writer::{events::XmlEvent, Error as XmlError, EventWriter, Result as WriterResult},
+    EmitterConfig,
+};
 
 static NAMESPACE_URL: &str = "http://graphml.graphdrawing.org/xmlns";
 
@@ -126,7 +129,7 @@ impl For {
     }
 }
 
-type PrintWeights<W> = for<'a> Fn(&'a W) -> Vec<(Cow<'static, str>, Cow<'a, str>)>;
+type PrintWeights<W> = dyn for<'a> Fn(&'a W) -> Vec<(Cow<'static, str>, Cow<'a, str>)>;
 
 /// GraphML output printer
 ///
@@ -205,17 +208,14 @@ where
     /// # fn make_graph() -> Graph<(), (String, u32)> {
     /// #     Graph::new()
     /// # }
-    /// # fn main() {
     /// let graph = make_graph();
-    /// let graphml = GraphMl::new(&graph)
-    ///     .export_edge_weights(Box::new(|edge| {
-    ///         let &(ref s, i) = edge;
-    ///         vec![
-    ///             ("str attr".into(), s[..].into()),
-    ///             ("int attr".into(), i.to_string().into()),
-    ///         ]
-    ///     }));
-    /// # }
+    /// let graphml = GraphMl::new(&graph).export_edge_weights(Box::new(|edge| {
+    ///     let &(ref s, i) = edge;
+    ///     vec![
+    ///         ("str attr".into(), s[..].into()),
+    ///         ("int attr".into(), i.to_string().into()),
+    ///     ]
+    /// }));
     /// ```
     ///
     /// Currently only string attribute types are supported.
@@ -262,31 +262,20 @@ where
     /// # fn make_graph() -> Graph<(String, u32), ()> {
     /// #     Graph::new()
     /// # }
-    /// # fn main() {
     /// let graph = make_graph();
-    /// let graphml = GraphMl::new(&graph)
-    ///     .export_node_weights(Box::new(|node| {
-    ///         let &(ref s, i) = node;
-    ///         vec![
-    ///             ("str attr".into(), s[..].into()),
-    ///             ("int attr".into(), i.to_string().into()),
-    ///         ]
-    ///     }));
-    /// # }
+    /// let graphml = GraphMl::new(&graph).export_node_weights(Box::new(|node| {
+    ///     let &(ref s, i) = node;
+    ///     vec![
+    ///         ("str attr".into(), s[..].into()),
+    ///         ("int attr".into(), i.to_string().into()),
+    ///     ]
+    /// }));
     /// ```
     ///
     /// Currently only string attribute types are supported.
     pub fn export_node_weights(mut self, node_weight: Box<PrintWeights<G::NodeWeight>>) -> Self {
         self.export_nodes = Some(node_weight);
         self
-    }
-
-    /// Create a string with the GraphML content.
-    pub fn to_string(&self) -> String {
-        let mut buff = Cursor::new(Vec::new());
-        self.to_writer(&mut buff)
-            .expect("Writing to a Cursor should never create IO errors.");
-        String::from_utf8(buff.into_inner()).unwrap()
     }
 
     /// Write the GraphML file to the given writer.
@@ -431,5 +420,22 @@ where
             .field("export_edges", &self.export_edges.is_some())
             .field("export_nodes", &self.export_nodes.is_some())
             .finish()
+    }
+}
+
+impl<G> Display for GraphMl<G>
+where
+    G: Debug,
+    G: IntoEdgeReferences,
+    G: IntoNodeReferences,
+    G: GraphProp,
+    G: NodeIndexable,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut buff = Cursor::new(Vec::new());
+        self.to_writer(&mut buff)
+            .expect("Writing to a Cursor should never create IO errors.");
+        let s = String::from_utf8(buff.into_inner()).unwrap();
+        write!(f, "{}", &s)
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "petgraph-graphml"
-version = "1.0.3"
+version = "2.0.0"
 authors = ["jonasbb"]
 
 description = "GraphML output support for petgraph"
@@ -8,13 +8,20 @@ documentation = "https://docs.rs/petgraph-graphml/"
 repository = "https://github.com/jonasbb/petgraph-graphml"
 readme = "README.md"
 keywords = ["graphml", "petgraph"]
-license = "MIT/Apache-2.0"
+license = "MIT or Apache-2.0"
+
+exclude = [
+    ".github",
+    ".gitignore",
+    "bors.toml",
+    "README.tpl",
+    "rustfmt.toml",
+]
 
 [badges]
-travis-ci = { repository = "jonasbb/petgraph-graphml", branch = "master", service = "github" }
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
-petgraph = "0.4.0"
+petgraph = "0.5.0"
 version-sync = "0.8.1"
 xml-rs = "0.8.0"
