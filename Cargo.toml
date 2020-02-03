@@ -8,7 +8,7 @@ documentation = "https://docs.rs/petgraph-graphml/"
 repository = "https://github.com/jonasbb/petgraph-graphml"
 readme = "README.md"
 keywords = ["graphml", "petgraph"]
-license = "MIT or Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 exclude = [
     ".github",
