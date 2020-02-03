@@ -93,16 +93,18 @@ extern crate xml;
 use petgraph::visit::{
     EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef,
 };
-use std::borrow::Cow;
-use std::collections::HashSet;
-use std::fmt::Debug;
-use std::fmt::{self, Display};
-use std::io::{self, Cursor, Write};
-use std::string::ToString;
-use xml::common::XmlVersion;
-use xml::writer::events::XmlEvent;
-use xml::writer::{Error as XmlError, EventWriter, Result as WriterResult};
-use xml::EmitterConfig;
+use std::{
+    borrow::Cow,
+    collections::HashSet,
+    fmt::{self, Debug, Display},
+    io::{self, Cursor, Write},
+    string::ToString,
+};
+use xml::{
+    common::XmlVersion,
+    writer::{events::XmlEvent, Error as XmlError, EventWriter, Result as WriterResult},
+    EmitterConfig,
+};
 
 static NAMESPACE_URL: &str = "http://graphml.graphdrawing.org/xmlns";
 
@@ -207,14 +209,13 @@ where
     /// #     Graph::new()
     /// # }
     /// let graph = make_graph();
-    /// let graphml = GraphMl::new(&graph)
-    ///     .export_edge_weights(Box::new(|edge| {
-    ///         let &(ref s, i) = edge;
-    ///         vec![
-    ///             ("str attr".into(), s[..].into()),
-    ///             ("int attr".into(), i.to_string().into()),
-    ///         ]
-    ///     }));
+    /// let graphml = GraphMl::new(&graph).export_edge_weights(Box::new(|edge| {
+    ///     let &(ref s, i) = edge;
+    ///     vec![
+    ///         ("str attr".into(), s[..].into()),
+    ///         ("int attr".into(), i.to_string().into()),
+    ///     ]
+    /// }));
     /// ```
     ///
     /// Currently only string attribute types are supported.
@@ -262,14 +263,13 @@ where
     /// #     Graph::new()
     /// # }
     /// let graph = make_graph();
-    /// let graphml = GraphMl::new(&graph)
-    ///     .export_node_weights(Box::new(|node| {
-    ///         let &(ref s, i) = node;
-    ///         vec![
-    ///             ("str attr".into(), s[..].into()),
-    ///             ("int attr".into(), i.to_string().into()),
-    ///         ]
-    ///     }));
+    /// let graphml = GraphMl::new(&graph).export_node_weights(Box::new(|node| {
+    ///     let &(ref s, i) = node;
+    ///     vec![
+    ///         ("str attr".into(), s[..].into()),
+    ///         ("int attr".into(), i.to_string().into()),
+    ///     ]
+    /// }));
     /// ```
     ///
     /// Currently only string attribute types are supported.
