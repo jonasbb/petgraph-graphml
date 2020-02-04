@@ -1,6 +1,3 @@
-extern crate petgraph;
-extern crate petgraph_graphml;
-
 use petgraph::graph::Graph;
 use petgraph_graphml::GraphMl;
 
