@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.0.1] - 2020-02-04
+
+### Changed
+
+* Change to use 2018 edition
+* Make version-sync only a dev dependency
+
 ## [2.0.0] - 2020-02-03
 
 ### Added
@@ -17,7 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
-* The MSRV is not 1.31
+* The MSRV is now 1.31
 
 ## [1.0.2] - 2018-05-15
 

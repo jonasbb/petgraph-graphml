@@ -15,7 +15,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! petgraph-graphml = "2.0.0"
+//! petgraph-graphml = "2.0.1"
 //! ```
 //!
 //! # Example
@@ -23,8 +23,6 @@
 //! For a simple graph like ![Graph with three nodes and two edges](https://github.com/jonasbb/petgraph-graphml/tree/master/doc/graph.png) this is the generated GraphML output.
 //!
 //! ```
-//! # extern crate petgraph;
-//! # extern crate petgraph_graphml;
 //! # use petgraph::Graph;
 //! # use petgraph_graphml::GraphMl;
 //! # fn make_graph() -> Graph<u32, ()> {
@@ -85,10 +83,7 @@
     unused_qualifications,
     variant_size_differences
 )]
-#![doc(html_root_url = "https://docs.rs/petgraph-graphml/2.0.0")]
-
-extern crate petgraph;
-extern crate xml;
+#![doc(html_root_url = "https://docs.rs/petgraph-graphml/2.0.1")]
 
 use petgraph::visit::{
     EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef,
@@ -201,8 +196,6 @@ where
     /// It will create two attributes "str attr" and "int attr" containing the string and integer part.
     ///
     /// ```
-    /// # extern crate petgraph;
-    /// # extern crate petgraph_graphml;
     /// # use petgraph::Graph;
     /// # use petgraph_graphml::GraphMl;
     /// # fn make_graph() -> Graph<(), (String, u32)> {
@@ -255,8 +248,6 @@ where
     /// It will create two attributes "str attr" and "int attr" containing the string and integer part.
     ///
     /// ```
-    /// # extern crate petgraph;
-    /// # extern crate petgraph_graphml;
     /// # use petgraph::Graph;
     /// # use petgraph_graphml::GraphMl;
     /// # fn make_graph() -> Graph<(String, u32), ()> {
@@ -413,7 +404,7 @@ where
     G: IntoEdgeReferences,
     G: IntoNodeReferences,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("GraphMl")
             .field("graph", &self.graph)
             .field("pretty_print", &self.pretty_print)
