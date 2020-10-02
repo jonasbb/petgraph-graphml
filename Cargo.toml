@@ -1,26 +1,20 @@
 [package]
+authors = ["Jonas Bushart"]
 name = "petgraph-graphml"
 version = "2.0.1"
-authors = ["jonasbb"]
 
 description = "GraphML output support for petgraph"
 documentation = "https://docs.rs/petgraph-graphml/"
-repository = "https://github.com/jonasbb/petgraph-graphml"
-readme = "README.md"
+edition = "2018"
 keywords = ["graphml", "petgraph"]
 license = "MIT OR Apache-2.0"
-edition = "2018"
+readme = "README.md"
+repository = "https://github.com/jonasbb/petgraph-graphml"
 
-exclude = [
-    ".github",
-    ".gitignore",
-    "bors.toml",
-    "README.tpl",
-    "rustfmt.toml",
-]
+include = ["src/**/*", "LICENSE-*", "README.*", "CHANGELOG.md"]
 
 [badges]
-maintenance = { status = "passively-maintained" }
+maintenance = {status = "passively-maintained"}
 
 [dependencies]
 petgraph = "0.5.0"
