@@ -348,7 +348,7 @@ where
             writer.write(XmlEvent::start_element("node").attr("id", &*node2str_id(node.id())))?;
             // Print weights
             if let Some(ref node_labels) = self.export_nodes {
-                let datas = node_labels(&node.weight());
+                let datas = node_labels(node.weight());
                 for (name, data) in datas {
                     emit_attribute(writer, name, &*data, For::Node)?;
                 }
@@ -366,7 +366,7 @@ where
             )?;
             // Print weights
             if let Some(ref edge_labels) = self.export_edges {
-                let datas = edge_labels(&edge.weight());
+                let datas = edge_labels(edge.weight());
                 for (name, data) in datas {
                     emit_attribute(writer, name, &*data, For::Edge)?;
                 }
