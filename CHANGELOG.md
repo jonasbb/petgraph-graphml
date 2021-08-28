@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.0] - 2021-08-28
+
+### Changed
+
+* Bump petgraph to 0.6.0
+
 ## [2.0.1] - 2020-02-04
 
 ### Changed

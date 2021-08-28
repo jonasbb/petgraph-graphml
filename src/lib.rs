@@ -88,18 +88,14 @@
 use petgraph::visit::{
     EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef,
 };
-use std::{
-    borrow::Cow,
-    collections::HashSet,
-    fmt::{self, Debug, Display},
-    io::{self, Cursor, Write},
-    string::ToString,
-};
-use xml::{
-    common::XmlVersion,
-    writer::{events::XmlEvent, Error as XmlError, EventWriter, Result as WriterResult},
-    EmitterConfig,
-};
+use std::borrow::Cow;
+use std::collections::HashSet;
+use std::fmt::{self, Debug, Display};
+use std::io::{self, Cursor, Write};
+use xml::common::XmlVersion;
+use xml::writer::events::XmlEvent;
+use xml::writer::{Error as XmlError, EventWriter, Result as WriterResult};
+use xml::EmitterConfig;
 
 static NAMESPACE_URL: &str = "http://graphml.graphdrawing.org/xmlns";
 
@@ -175,7 +171,7 @@ where
     /// [`Display`]: ::std::fmt::Display
     pub fn export_edge_weights_display(self) -> Self
     where
-        G::EdgeWeight: ToString,
+        G::EdgeWeight: Display,
     {
         self.export_edge_weights(Box::new(|edge| {
             vec![("weight".into(), edge.to_string().into())]
@@ -227,7 +223,7 @@ where
     /// [`Display`]: ::std::fmt::Display
     pub fn export_node_weights_display(self) -> Self
     where
-        G::NodeWeight: ToString,
+        G::NodeWeight: Display,
     {
         self.export_node_weights(Box::new(|node| {
             vec![("weight".into(), node.to_string().into())]
