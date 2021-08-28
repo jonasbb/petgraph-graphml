@@ -1,7 +1,7 @@
 [package]
 authors = ["Jonas Bushart"]
 name = "petgraph-graphml"
-version = "2.0.1"
+version = "3.0.0"
 
 description = "GraphML output support for petgraph"
 documentation = "https://docs.rs/petgraph-graphml/"
