@@ -83,6 +83,7 @@
     unused_qualifications,
     variant_size_differences
 )]
+#![allow(unknown_lints, clippy::return_self_not_must_use)]
 #![doc(html_root_url = "https://docs.rs/petgraph-graphml/3.0.0")]
 
 use petgraph::visit::{
