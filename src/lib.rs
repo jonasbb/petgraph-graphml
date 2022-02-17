@@ -298,10 +298,11 @@ where
         })?;
         writer.write(XmlEvent::start_element("graphml").attr("xmlns", NAMESPACE_URL))?;
 
-        // emit graph with nodes/edges and possibly weights
-        self.emit_graph(writer, &mut attributes)?;
         // Emit <key> tags for all the attributes
         self.emit_keys(writer, &attributes)?;
+
+        // emit graph with nodes/edges and possibly weights
+        self.emit_graph(writer, &mut attributes)?;
 
         writer.write(XmlEvent::end_element())?; // end graphml
         Ok(())
