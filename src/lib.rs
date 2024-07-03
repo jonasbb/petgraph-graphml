@@ -169,7 +169,7 @@ where
     ///
     /// Once set this option cannot be disabled anymore.
     ///
-    /// [`Display`]: ::std::fmt::Display
+    /// [`Display`]: Display
     pub fn export_edge_weights_display(self) -> Self
     where
         G::EdgeWeight: Display,
@@ -221,7 +221,7 @@ where
     ///
     /// Once set this option cannot be disabled anymore.
     ///
-    /// [`Display`]: ::std::fmt::Display
+    /// [`Display`]: Display
     pub fn export_node_weights_display(self) -> Self
     where
         G::NodeWeight: Display,
