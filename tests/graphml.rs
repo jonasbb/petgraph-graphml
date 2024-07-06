@@ -111,21 +111,15 @@ fn node_and_edge_display_weight() {
     let xml = graphml.to_string();
     let expected1 = r#"<?xml version="1.0" encoding="UTF-8"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
-  <key id="weight" for="node" attr.name="weight" attr.type="string" />
-  <key id="weight" for="edge" attr.name="weight" attr.type="string" />
-  <graph edgedefault="directed">
-    <node id="n0">
-      <data key="weight">petgraph</data>
-    </node>
-    <node id="n1">
-      <data key="weight">fixedbitset</data>
-    </node>
-    <edge id="e0" source="n0" target="n1">
-      <data key="weight">depends on</data>
-    </edge>
-  </graph>
-</graphml>"#;
+"#;
+
+    let expected2 = r#"<key id="weight" for="node" attr.name="weight" attr.type="string" />"#;
+    let expected3 = r#"<key id="weight" for="edge" attr.name="weight" attr.type="string" />"#;
+    let expected4 = r#"</graphml>"#;
 
     // HashSet output is unordered, therefore we do not know the order of the keys
     assert!(xml.starts_with(expected1));
+    assert!(xml.contains(expected2));
+    assert!(xml.contains(expected3));
+    assert!(xml.ends_with(expected4));
 }
