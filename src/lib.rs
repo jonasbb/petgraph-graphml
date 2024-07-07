@@ -15,7 +15,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! petgraph-graphml = "3.0.0"
+//! petgraph-graphml = "3.1.0"
 //! ```
 //!
 //! # Example
@@ -84,7 +84,7 @@
     variant_size_differences
 )]
 #![allow(unknown_lints, clippy::return_self_not_must_use)]
-#![doc(html_root_url = "https://docs.rs/petgraph-graphml/3.0.0")]
+#![doc(html_root_url = "https://docs.rs/petgraph-graphml/3.1.0")]
 
 use petgraph::visit::{
     EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef,

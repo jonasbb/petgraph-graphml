@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.1.0] - 2024-07-07
+
+### Fixed
+
+* Place `<key>` tags before nodes and edges (#53, #57)
+
+    The graphml spec requires the key tags to be emitted first, which was not done.
+    This change means the output is now usable by more programs.
+
+    Thanks to @Shadetheartist for providing the PR.
+
 ## [3.0.0] - 2021-08-28
 
 ### Changed
