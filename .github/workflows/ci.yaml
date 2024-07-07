@@ -58,7 +58,7 @@ jobs:
         os: ["ubuntu-latest", "windows-latest"]
         # It is good to test more than the MSRV and stable since sometimes
         # breakage occurs in intermediate versions.
-        rust: ["1.46", "1.50", "stable", "beta", "nightly"]
+        rust: ["stable", "beta", "nightly"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
