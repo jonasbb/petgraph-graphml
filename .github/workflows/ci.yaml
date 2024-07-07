@@ -6,15 +6,10 @@ on:
   push:
     branches:
       - master
-      - staging
-      - trying
-  # Test once per week: Monday at 00:00
+  # Test once per week: Saturday at 00:00
   schedule:
-    - cron: "0 0 * * 1"
-
-env:
-  CARGO_INCREMENTAL: 0
-  RUSTFLAGS: -D warnings
+    - cron: "0 0 * * 6"
+permissions: read-all
 
 jobs:
   clippy_check:
@@ -25,31 +20,19 @@ jobs:
         rust: ["stable", "nightly"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - name: "Install/Update the Rust version"
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
           components: clippy
-      - uses: actions-rs/clippy-check@v1
-        name: clippy "No Default Features" (${{ matrix.os }} / ${{ matrix.rust }})
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --workspace --no-default-features --all-targets -- -D warnings
-          name: clippy "No Default Features" (${{ matrix.os }} / ${{ matrix.rust }})
-      - uses: actions-rs/clippy-check@v1
-        name: clippy "Default" (${{ matrix.os }} / ${{ matrix.rust }})
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --workspace --all-targets -- -D warnings
-          name: clippy "Default" (${{ matrix.os }} / ${{ matrix.rust }})
-      - uses: actions-rs/clippy-check@v1
-        name: clippy "All Features" (${{ matrix.os }} / ${{ matrix.rust }})
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --workspace --all-features --all-targets -- -D warnings
-          name: clippy "All Features" (${{ matrix.os }} / ${{ matrix.rust }})
+
+      - name: clippy "No Default Features" (${{ matrix.os }} / ${{ matrix.rust }})
+        run: cargo clippy --workspace --no-default-features --all-targets
+      - name: clippy "Default" (${{ matrix.os }} / ${{ matrix.rust }})
+        run: cargo clippy --workspace --all-targets
+      - name: clippy "All Features" (${{ matrix.os }} / ${{ matrix.rust }})
+        run: cargo clippy --workspace --all-features --all-targets
 
   rustfmt:
     name: Rustfmt
@@ -59,18 +42,14 @@ jobs:
         rust:
           - stable
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - name: "Install/Update the Rust version"
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
           components: rustfmt
-      - uses: actions-rs/cargo@v1
-        name: Rustfmt Check (${{ matrix.rust }})
-        with:
-          command: fmt
-          args: --all -- --check
+
+      - name: Rustfmt Check (${{ matrix.rust }})
+        uses: actions-rust-lang/rustfmt@v1
 
   build_and_test:
     name: Build and Test
@@ -82,45 +61,35 @@ jobs:
         rust: ["1.46", "1.50", "stable", "beta", "nightly"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - name: "Install/Update the Rust version"
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
-      - uses: actions-rs/cargo@v1
-        name: Build (${{ matrix.os }} / ${{ matrix.rust }})
-        with:
-          command: build
-          args: --workspace --all-features --all-targets
-      - uses: actions-rs/cargo@v1
-        name: Test "No Default Features" (${{ matrix.os }} / ${{ matrix.rust }})
-        with:
-          command: test
-          # cargo test --all-targets does NOT run doctests
-          # since doctests are important this should not be added
-          # https://github.com/rust-lang/cargo/issues/6669
-          args: --workspace --no-default-features
-      - uses: actions-rs/cargo@v1
-        name: Test "Default" (${{ matrix.os }} / ${{ matrix.rust }})
-        with:
-          command: test
-          args: --workspace
-      - uses: actions-rs/cargo@v1
-        name: Test "All Features" (${{ matrix.os }} / ${{ matrix.rust }})
-        with:
-          command: test
-          args: --workspace --all-features
+
+      # The tests are split into build and run steps, to see the time impact of each
+      # cargo test --all-targets does NOT run doctests
+      # since doctests are important this should not be added
+      # https://github.com/rust-lang/cargo/issues/6669
+      - name: Build (${{ matrix.os }} / ${{ matrix.rust }})
+        run: cargo build --workspace --all-features --all-targets
+      - name: Test "No Default Features" (${{ matrix.os }} / ${{ matrix.rust }})
+        run: cargo test --workspace --no-default-features
+      - name: Test "Default" (${{ matrix.os }} / ${{ matrix.rust }})
+        run: cargo test --workspace
+      - name: Test "All Features" (${{ matrix.os }} / ${{ matrix.rust }})
+        run: cargo test --workspace --all-features
 
       - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
-        if: matrix.rust == 'stable'  && matrix.os == 'ubuntu-latest'
-        with:
-          # tarpaulin already runs with --all-targets
-          args: "--workspace --all-features -- --test-threads 1"
-          version: "latest"
+        if: matrix.rust == 'stable' && matrix.os == 'ubuntu-latest'
+        run: |
+          cargo install cargo-tarpaulin
+          cargo tarpaulin --out xml --workspace --all-features -- --test-threads=1
+        env:
+          # https://github.com/xd009642/tarpaulin/issues/1499
+          CARGO_PROFILE_DEV_DEBUG: 1
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         if: matrix.rust == 'stable' && matrix.os == 'ubuntu-latest'
 
   # Added to summarize the matrix (otherwise we would need to list every single
