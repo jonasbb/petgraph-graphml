@@ -286,7 +286,6 @@ where
     where
         W: Write,
     {
-
         // XML/GraphML boilerplate
         writer.write(XmlEvent::StartDocument {
             version: XmlVersion::Version10,
@@ -302,13 +301,11 @@ where
         // emit graph with nodes/edges and possibly weights
         self.emit_graph(writer)?;
 
-
         writer.write(XmlEvent::end_element())?; // end graphml
         Ok(())
     }
 
     fn extract_attributes(&self) -> HashSet<Attribute> {
-
         // Store information about the attributes for nodes and edges.
         // We cannot know in advance what the attribute names will be, so we just keep track of what gets emitted.
         let mut attributes: HashSet<Attribute> = HashSet::new();
@@ -317,7 +314,10 @@ where
         for node in self.graph.node_references() {
             if let Some(ref node_labels) = self.export_nodes {
                 for (name, _) in node_labels(node.weight()) {
-                    attributes.insert(Attribute { name, for_: For::Node });
+                    attributes.insert(Attribute {
+                        name,
+                        for_: For::Node,
+                    });
                 }
             }
         }
@@ -326,7 +326,10 @@ where
         for edge in self.graph.edge_references() {
             if let Some(ref edge_labels) = self.export_edges {
                 for (name, _) in edge_labels(edge.weight()) {
-                    attributes.insert(Attribute { name, for_: For::Edge });
+                    attributes.insert(Attribute {
+                        name,
+                        for_: For::Edge,
+                    });
                 }
             }
         }
@@ -338,20 +341,18 @@ where
     fn emit_attribute<W>(
         &self,
         writer: &mut EventWriter<W>,
-        name: Cow<'static, str>, data: &str
+        name: Cow<'static, str>,
+        data: &str,
     ) -> WriterResult<()>
     where
-        W: Write
+        W: Write,
     {
-        writer.write(XmlEvent::start_element("data").attr("key", &*name))?;
+        writer.write(XmlEvent::start_element("data").attr("key", &name))?;
         writer.write(XmlEvent::characters(data))?;
         writer.write(XmlEvent::end_element()) // end data
     }
 
-    fn emit_graph<W>(
-        &self,
-        writer: &mut EventWriter<W>,
-    ) -> WriterResult<()>
+    fn emit_graph<W>(&self, writer: &mut EventWriter<W>) -> WriterResult<()>
     where
         W: Write,
     {
@@ -370,12 +371,12 @@ where
 
         // Emit nodes
         for node in self.graph.node_references() {
-            writer.write(XmlEvent::start_element("node").attr("id", &*node2str_id(node.id())))?;
+            writer.write(XmlEvent::start_element("node").attr("id", &node2str_id(node.id())))?;
             // Print weights
             if let Some(ref node_labels) = self.export_nodes {
                 let datas = node_labels(node.weight());
                 for (name, data) in datas {
-                    self.emit_attribute(writer, name, &*data)?;
+                    self.emit_attribute(writer, name, &data)?;
                 }
             }
             writer.write(XmlEvent::end_element())?; // end node
@@ -386,14 +387,14 @@ where
             writer.write(
                 XmlEvent::start_element("edge")
                     .attr("id", &format!("e{}", i))
-                    .attr("source", &*node2str_id(edge.source()))
-                    .attr("target", &*node2str_id(edge.target())),
+                    .attr("source", &node2str_id(edge.source()))
+                    .attr("target", &node2str_id(edge.target())),
             )?;
             // Print weights
             if let Some(ref edge_labels) = self.export_edges {
                 let datas = edge_labels(edge.weight());
                 for (name, data) in datas {
-                    self.emit_attribute(writer, name, &*data)?;
+                    self.emit_attribute(writer, name, &data)?;
                 }
             }
             writer.write(XmlEvent::end_element())?; // end edge
@@ -401,19 +402,16 @@ where
         writer.write(XmlEvent::end_element()) // end graph
     }
 
-    fn emit_keys<W>(
-        &self,
-        writer: &mut EventWriter<W>
-    ) -> WriterResult<()>
+    fn emit_keys<W>(&self, writer: &mut EventWriter<W>) -> WriterResult<()>
     where
         W: Write,
     {
         for attr in self.extract_attributes() {
             writer.write(
                 XmlEvent::start_element("key")
-                    .attr("id", &*attr.name)
+                    .attr("id", &attr.name)
                     .attr("for", attr.for_.to_str())
-                    .attr("attr.name", &*attr.name)
+                    .attr("attr.name", &attr.name)
                     .attr("attr.type", "string"),
             )?;
             writer.write(XmlEvent::end_element())?; // end key
