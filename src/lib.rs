@@ -47,6 +47,7 @@
 //!     graphml.to_string(),
 //!     r#"<?xml version="1.0" encoding="UTF-8"?>
 //! <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+//!   <key id="weight" for="node" attr.name="weight" attr.type="string" />
 //!   <graph edgedefault="directed">
 //!     <node id="n0">
 //!       <data key="weight">0</data>
@@ -60,7 +61,6 @@
 //!     <edge id="e0" source="n0" target="n1" />
 //!     <edge id="e1" source="n1" target="n2" />
 //!   </graph>
-//!   <key id="weight" for="node" attr.name="weight" attr.type="string" />
 //! </graphml>"#
 //! );
 //! # }
@@ -169,7 +169,7 @@ where
     ///
     /// Once set this option cannot be disabled anymore.
     ///
-    /// [`Display`]: ::std::fmt::Display
+    /// [`Display`]: Display
     pub fn export_edge_weights_display(self) -> Self
     where
         G::EdgeWeight: Display,
@@ -221,7 +221,7 @@ where
     ///
     /// Once set this option cannot be disabled anymore.
     ///
-    /// [`Display`]: ::std::fmt::Display
+    /// [`Display`]: Display
     pub fn export_node_weights_display(self) -> Self
     where
         G::NodeWeight: Display,
@@ -286,9 +286,6 @@ where
     where
         W: Write,
     {
-        // Store information about the attributes for nodes and edges.
-        // We cannot know in advance what the attribute names will be, so we just keep track of what gets emitted.
-        let mut attributes: HashSet<Attribute> = HashSet::new();
 
         // XML/GraphML boilerplate
         writer.write(XmlEvent::StartDocument {
@@ -298,37 +295,68 @@ where
         })?;
         writer.write(XmlEvent::start_element("graphml").attr("xmlns", NAMESPACE_URL))?;
 
-        // emit graph with nodes/edges and possibly weights
-        self.emit_graph(writer, &mut attributes)?;
+        // First pass to extract keys
         // Emit <key> tags for all the attributes
-        self.emit_keys(writer, &attributes)?;
+        self.emit_keys(writer)?;
+
+        // emit graph with nodes/edges and possibly weights
+        self.emit_graph(writer)?;
+
 
         writer.write(XmlEvent::end_element())?; // end graphml
         Ok(())
     }
 
+    fn extract_attributes(&self) -> HashSet<Attribute> {
+
+        // Store information about the attributes for nodes and edges.
+        // We cannot know in advance what the attribute names will be, so we just keep track of what gets emitted.
+        let mut attributes: HashSet<Attribute> = HashSet::new();
+
+        // Harvest Node Keys
+        for node in self.graph.node_references() {
+            if let Some(ref node_labels) = self.export_nodes {
+                for (name, _) in node_labels(node.weight()) {
+                    attributes.insert(Attribute { name, for_: For::Node });
+                }
+            }
+        }
+
+        // Harvest Edge Keys
+        for edge in self.graph.edge_references() {
+            if let Some(ref edge_labels) = self.export_edges {
+                for (name, _) in edge_labels(edge.weight()) {
+                    attributes.insert(Attribute { name, for_: For::Edge });
+                }
+            }
+        }
+
+        attributes
+    }
+
+    // Emit an attribute for either node or edge
+    fn emit_attribute<W>(
+        &self,
+        writer: &mut EventWriter<W>,
+        name: Cow<'static, str>, data: &str
+    ) -> WriterResult<()>
+    where
+        W: Write
+    {
+        writer.write(XmlEvent::start_element("data").attr("key", &*name))?;
+        writer.write(XmlEvent::characters(data))?;
+        writer.write(XmlEvent::end_element()) // end data
+    }
+
     fn emit_graph<W>(
         &self,
         writer: &mut EventWriter<W>,
-        attributes: &mut HashSet<Attribute>,
     ) -> WriterResult<()>
     where
         W: Write,
     {
         // convenience function to turn a NodeId into a String
         let node2str_id = |node: G::NodeId| -> String { format!("n{}", self.graph.to_index(node)) };
-        // Emit an attribute for either node or edge
-        // This will also keep track of updating the global attributes list
-        let mut emit_attribute = |writer: &mut EventWriter<_>,
-                                  name: Cow<'static, str>,
-                                  data: &str,
-                                  for_: For|
-         -> WriterResult<()> {
-            writer.write(XmlEvent::start_element("data").attr("key", &*name))?;
-            attributes.insert(Attribute { name, for_ });
-            writer.write(XmlEvent::characters(data))?;
-            writer.write(XmlEvent::end_element()) // end data
-        };
 
         // Each graph needs a default edge type
         writer.write(XmlEvent::start_element("graph").attr(
@@ -347,7 +375,7 @@ where
             if let Some(ref node_labels) = self.export_nodes {
                 let datas = node_labels(node.weight());
                 for (name, data) in datas {
-                    emit_attribute(writer, name, &*data, For::Node)?;
+                    self.emit_attribute(writer, name, &*data)?;
                 }
             }
             writer.write(XmlEvent::end_element())?; // end node
@@ -365,7 +393,7 @@ where
             if let Some(ref edge_labels) = self.export_edges {
                 let datas = edge_labels(edge.weight());
                 for (name, data) in datas {
-                    emit_attribute(writer, name, &*data, For::Edge)?;
+                    self.emit_attribute(writer, name, &*data)?;
                 }
             }
             writer.write(XmlEvent::end_element())?; // end edge
@@ -375,13 +403,12 @@ where
 
     fn emit_keys<W>(
         &self,
-        writer: &mut EventWriter<W>,
-        attributes: &HashSet<Attribute>,
+        writer: &mut EventWriter<W>
     ) -> WriterResult<()>
     where
         W: Write,
     {
-        for attr in attributes {
+        for attr in self.extract_attributes() {
             writer.write(
                 XmlEvent::start_element("key")
                     .attr("id", &*attr.name)
@@ -401,7 +428,7 @@ where
     G: IntoEdgeReferences,
     G: IntoNodeReferences,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("GraphMl")
             .field("graph", &self.graph)
             .field("pretty_print", &self.pretty_print)
