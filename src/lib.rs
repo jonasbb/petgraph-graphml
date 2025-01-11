@@ -154,7 +154,7 @@ where
         }
     }
 
-    /// Enable or disble pretty printing of the XML.
+    /// Enable or disable pretty printing of the XML.
     ///
     /// Pretty printing enables linebreaks and indentation.
     pub fn pretty_print(mut self, state: bool) -> Self {
@@ -182,7 +182,7 @@ where
     /// Export the edge weights to GraphML.
     ///
     /// This uses a custom conversion function.
-    /// Each edge can be converted into an arbitray number of attributes.
+    /// Each edge can be converted into an arbitrary number of attributes.
     /// Each attribute is a key-value pair, represented as tuple.
     ///
     /// Once set this option cannot be disabled anymore.
@@ -234,7 +234,7 @@ where
     /// Export the node weights to GraphML.
     ///
     /// This uses a custom conversion function.
-    /// Each node can be converted into an arbitray number of attributes.
+    /// Each node can be converted into an arbitrary number of attributes.
     /// Each attribute is a key-value pair, represented as tuple.
     ///
     /// Once set this option cannot be disabled anymore.
@@ -374,8 +374,8 @@ where
             writer.write(XmlEvent::start_element("node").attr("id", &node2str_id(node.id())))?;
             // Print weights
             if let Some(ref node_labels) = self.export_nodes {
-                let datas = node_labels(node.weight());
-                for (name, data) in datas {
+                let data = node_labels(node.weight());
+                for (name, data) in data {
                     self.emit_attribute(writer, name, &data)?;
                 }
             }
@@ -392,8 +392,8 @@ where
             )?;
             // Print weights
             if let Some(ref edge_labels) = self.export_edges {
-                let datas = edge_labels(edge.weight());
-                for (name, data) in datas {
+                let data = edge_labels(edge.weight());
+                for (name, data) in data {
                     self.emit_attribute(writer, name, &data)?;
                 }
             }
