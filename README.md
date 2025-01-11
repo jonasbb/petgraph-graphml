@@ -17,7 +17,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-petgraph-graphml = "3.1.0"
+petgraph-graphml = "4.0.0"
 ```
 
 ## Example
