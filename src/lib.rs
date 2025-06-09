@@ -386,7 +386,7 @@ where
         for (i, edge) in self.graph.edge_references().enumerate() {
             writer.write(
                 XmlEvent::start_element("edge")
-                    .attr("id", &format!("e{}", i))
+                    .attr("id", &format!("e{i}"))
                     .attr("source", &node2str_id(edge.source()))
                     .attr("target", &node2str_id(edge.target())),
             )?;
