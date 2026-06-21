@@ -449,6 +449,6 @@ where
         self.to_writer(&mut buff)
             .expect("Writing to a Cursor should never create IO errors.");
         let s = String::from_utf8(buff.into_inner()).unwrap();
-        write!(f, "{}", &s)
+        write!(f, "{s}")
     }
 }
