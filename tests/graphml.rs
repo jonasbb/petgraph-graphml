@@ -57,7 +57,7 @@ fn single_edge() {
     let mut deps = Graph::<&str, &str>::new();
     let pg = deps.add_node("petgraph");
     let fb = deps.add_node("fixedbitset");
-    deps.extend_with_edges(&[(pg, fb)]);
+    deps.extend_with_edges([(pg, fb)]);
 
     let graphml = GraphMl::new(&deps).pretty_print(true);
     let xml = graphml.to_string();
