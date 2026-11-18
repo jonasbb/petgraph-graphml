@@ -90,8 +90,9 @@ use petgraph::visit::{
     EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeIndexable, NodeRef,
 };
 use std::borrow::Cow;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{self, Debug, Display};
+use std::hash::Hash;
 use std::io::{self, Cursor, Write};
 use xml::common::XmlVersion;
 use xml::writer::events::XmlEvent;
@@ -100,10 +101,42 @@ use xml::EmitterConfig;
 
 static NAMESPACE_URL: &str = "http://graphml.graphdrawing.org/xmlns";
 
+/// A data type that can be held by an attribute added to nodes or edges.
+#[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+pub enum AttributeType {
+    /// A boolean value, true or false
+    Boolean,
+    /// An small integer
+    Int,
+    /// A larger integer
+    Long,
+    /// A floating point number
+    Float,
+    /// A floating point number with double precision
+    Double,
+    /// A character string
+    #[default]
+    String,
+}
+
+impl AttributeType {
+    fn to_str(&self) -> &'static str {
+        match self {
+            AttributeType::Boolean => "boolean",
+            AttributeType::Int => "int",
+            AttributeType::Long => "long",
+            AttributeType::Float => "float",
+            AttributeType::Double => "double",
+            AttributeType::String => "string",
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 struct Attribute {
     name: Cow<'static, str>,
     for_: For,
+    type_: AttributeType,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -135,6 +168,7 @@ where
     pretty_print: bool,
     export_edges: Option<Box<PrintWeights<G::EdgeWeight>>>,
     export_nodes: Option<Box<PrintWeights<G::NodeWeight>>>,
+    attribute_types: HashMap<Cow<'static, str>, AttributeType>,
 }
 
 impl<G> GraphMl<G>
@@ -151,6 +185,7 @@ where
             pretty_print: true,
             export_edges: None,
             export_nodes: None,
+            attribute_types: HashMap::new(),
         }
     }
 
@@ -159,6 +194,17 @@ where
     /// Pretty printing enables linebreaks and indentation.
     pub fn pretty_print(mut self, state: bool) -> Self {
         self.pretty_print = state;
+        self
+    }
+
+    /// Sets the data type of an attribute added to nodes or edges.
+    ///
+    /// This data type will be exposed in the resulting GraphML file
+    /// in the declaration of the attribute.
+    /// It is your responsibility to ensure that the values of this
+    /// attribute can be parsed as values of this datatype.
+    pub fn set_attribute_data_type(mut self, key: Cow<'static, str>, type_: AttributeType) -> Self {
+        self.attribute_types.insert(key, type_);
         self
     }
 
@@ -314,9 +360,15 @@ where
         for node in self.graph.node_references() {
             if let Some(ref node_labels) = self.export_nodes {
                 for (name, _) in node_labels(node.weight()) {
+                    let type_ = self
+                        .attribute_types
+                        .get(name.as_ref())
+                        .cloned()
+                        .unwrap_or_default();
                     attributes.insert(Attribute {
                         name,
                         for_: For::Node,
+                        type_,
                     });
                 }
             }
@@ -326,9 +378,15 @@ where
         for edge in self.graph.edge_references() {
             if let Some(ref edge_labels) = self.export_edges {
                 for (name, _) in edge_labels(edge.weight()) {
+                    let type_ = self
+                        .attribute_types
+                        .get(name.as_ref())
+                        .cloned()
+                        .unwrap_or_default();
                     attributes.insert(Attribute {
                         name,
                         for_: For::Edge,
+                        type_,
                     });
                 }
             }
@@ -412,7 +470,7 @@ where
                     .attr("id", &attr.name)
                     .attr("for", attr.for_.to_str())
                     .attr("attr.name", &attr.name)
-                    .attr("attr.type", "string"),
+                    .attr("attr.type", &attr.type_.to_str()),
             )?;
             writer.write(XmlEvent::end_element())?; // end key
         }

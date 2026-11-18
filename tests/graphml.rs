@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use petgraph::graph::Graph;
 use petgraph_graphml::GraphMl;
 
@@ -45,6 +47,36 @@ fn single_node_with_display_weight() {
   <graph edgedefault="directed">
     <node id="n0">
       <data key="weight">petgraph</data>
+    </node>
+  </graph>
+</graphml>"#;
+
+    assert_eq!(expected, xml);
+}
+
+#[test]
+fn single_node_with_custom_attributes() {
+    let mut deps = Graph::<&str, &str>::new();
+    deps.add_node("petgraph");
+
+    let graphml = GraphMl::new(&deps)
+        .pretty_print(true)
+        .set_attribute_data_type("size".into(), petgraph_graphml::AttributeType::Int)
+        .export_node_weights(Box::new(|_| {
+            vec![
+                ("label".into(), "my_node".into()),
+                ("size".into(), "123".into()),
+            ]
+        }));
+    let xml = graphml.to_string();
+    let expected = r#"<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <key id="size" for="node" attr.name="size" attr.type="int" />
+  <key id="label" for="node" attr.name="label" attr.type="string" />
+  <graph edgedefault="directed">
+    <node id="n0">
+      <data key="label">my_node</data>
+      <data key="size">123</data>
     </node>
   </graph>
 </graphml>"#;
